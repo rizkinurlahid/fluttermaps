@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_maps/views/pages/homePage.dart';
+import 'package:flutter_maps/views/pages/HomePage.dart';
+import 'package:flutter_maps/views/pages/addUser.dart';
+import 'package:flutter_maps/views/pages/detailUser.dart';
 
 void main() => runApp(MyApp());
 
@@ -11,7 +13,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: Splashscreen(),
+      home: DetailUser(),
     );
   }
 }
@@ -26,20 +28,20 @@ class _SplashscreenState extends State<Splashscreen> {
   @override
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context).size;
-    if (isOpen == false)
-      Future.delayed(Duration(seconds: 2)).then((_) {
-        setState(() {
-          isOpen = true;
-        });
-      }).then((_) {
-        Future.delayed(Duration(seconds: 1)).then((_) {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => HomePage()),
-            (Route<dynamic> route) => false,
+    if (!isOpen)
+      Future.delayed(Duration(seconds: 2))
+          .then((_) => setState(() => isOpen = true))
+          .then(
+        (_) {
+          Future.delayed(Duration(seconds: 1)).then(
+            (_) => Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => HomePage()),
+              (Route<dynamic> route) => false,
+            ),
           );
-        });
-      });
+        },
+      );
     return Scaffold(
       body: Stack(
         children: <Widget>[
