@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_maps/views/pages/HomePage.dart';
 import 'package:flutter_maps/views/pages/detailUser.dart';
 
-class SuccessAddData extends StatelessWidget {
+class SuccessLoad extends StatelessWidget {
+  final bool isDelete;
+  SuccessLoad({@required this.isDelete});
   @override
   Widget build(BuildContext context) {
     Future.delayed(Duration(milliseconds: 1500)).then((_) {
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => DetailUser()),
+        MaterialPageRoute(
+            builder: (context) =>
+                (!isDelete) ? DetailUser(isPrefs: false) : HomePage()),
         (Route<dynamic> route) => false,
       );
     });

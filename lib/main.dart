@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_maps/views/pages/HomePage.dart';
-import 'package:flutter_maps/views/pages/addUser.dart';
-import 'package:flutter_maps/views/pages/detailUser.dart';
 
 void main() => runApp(MyApp());
 
@@ -13,7 +11,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: DetailUser(),
+      home: Splashscreen(),
     );
   }
 }

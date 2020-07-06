@@ -25,7 +25,7 @@ class _PhotoProfileState extends State<PhotoProfile> {
       width: 125,
       child: Stack(
         children: <Widget>[
-          (widget.childClipRRect != null)
+          (widget.childClipRRect != null && widget.isEditable)
               ? ClipRRect(
                   borderRadius: BorderRadius.circular(125),
                   child: widget.childClipRRect,

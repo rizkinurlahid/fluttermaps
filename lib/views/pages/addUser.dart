@@ -2,6 +2,7 @@ import 'package:date_util/date_util.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_maps/view-models/addUserViewModel.dart';
+import 'package:flutter_maps/views/pages/HomePage.dart';
 import 'package:flutter_maps/views/widgets/backgroundField.dart';
 import 'package:flutter_maps/views/widgets/dropdownMenuItemCustom.dart';
 import 'package:flutter_maps/views/widgets/isError.dart';
@@ -19,17 +20,32 @@ class _AddUserState extends State<AddUser> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
     return ViewModelBuilder<AddUserViewModel>.reactive(
       viewModelBuilder: () => homePageViewModel,
       onModelReady: (model) => model.initial,
       builder: (context, model, child) {
-        return SafeArea(
+        return WillPopScope(
+          onWillPop: () async {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => HomePage()),
+              (Route<dynamic> route) => false,
+            );
+            return false;
+          },
           child: Scaffold(
             key: model.scaffoldKey,
             resizeToAvoidBottomInset: false,
             appBar: AppBar(
               title: Text('Add User'),
+              leading: IconButton(
+                icon: Icon(Icons.arrow_back),
+                onPressed: () => Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => HomePage()),
+                  (Route<dynamic> route) => false,
+                ),
+              ),
             ),
             body: SingleChildScrollView(
               child: Padding(
@@ -46,6 +62,7 @@ class _AddUserState extends State<AddUser> {
                     IgnorePointer(
                       ignoring: model.isLoading,
                       child: PhotoProfile(
+                        isEditable: true,
                         childClipRRect: (model.imageFile != null)
                             ? Image.file(model.imageFile,
                                 fit: BoxFit.cover, height: 125, width: 125)
@@ -141,7 +158,7 @@ class _AddUserState extends State<AddUser> {
                       ],
                     ),
                     IsError(
-                      height: (model.isNotValidate) ? model.height : 0,
+                      height: model.height,
                       text: 'Please fill in the above first',
                     ),
                     Align(
@@ -175,10 +192,10 @@ class _AddUserState extends State<AddUser> {
                                       initialCameraPosition: CameraPosition(
                                           target: model.currentLatLng,
                                           zoom: 14.4746),
-                                      onMapCreated:
-                                          (GoogleMapController controller) {
-                                        model.controller.complete(controller);
-                                      },
+                                      // onMapCreated:
+                                      //     (GoogleMapController controller) {
+                                      //   model.controller.complete(controller);
+                                      // },
                                       markers: Set.of((model.marker != null)
                                           ? [model.marker]
                                           : []),

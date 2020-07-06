@@ -1,6 +1,8 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_maps/view-models/mapsViewModel.dart';
 import 'package:flutter_maps/views/pages/addUser.dart';
+import 'package:flutter_maps/views/pages/detailUser.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:stacked/stacked.dart';
@@ -8,7 +10,8 @@ import 'package:stacked/stacked.dart';
 class Maps extends StatefulWidget {
   final bool isView;
   final LatLng current;
-  Maps({@required this.isView, this.current});
+  final bool isFromUpdate;
+  Maps({@required this.isView, this.current, @required this.isFromUpdate});
   @override
   _MapsState createState() => _MapsState();
 }
@@ -21,6 +24,7 @@ class _MapsState extends State<Maps> {
     super.initState();
     if (widget.isView) {
       mapsViewModel.getPolylinesAndDistance(current: widget.current);
+      mapsViewModel.getPlacemark(latLng: widget.current);
     }
   }
 
@@ -75,25 +79,44 @@ class _MapsState extends State<Maps> {
                               markerId: MarkerId('m2'),
                               position: widget.current,
                               draggable: false,
+                              infoWindow:
+                                  InfoWindow(title: model?.currentLocation),
                               icon: BitmapDescriptor.defaultMarker),
                           Marker(
                             markerId: MarkerId('m3'),
                             position: model.destination,
                             draggable: false,
+                            infoWindow:
+                                InfoWindow(title: model?.destinationLocation),
                             icon: BitmapDescriptor.defaultMarkerWithHue(50),
                           ),
                         ]),
                   circles: (!widget.isView)
                       ? Set.of((model.circle != null) ? [model.circle] : [])
                       : null,
-                  polylines: (widget.isView) ? model.polylines : null,
+                  polylines: (widget.isView)
+                      ? Set<Polyline>.of(model.getPolylines.values)
+                      : null,
                 ),
               ),
               (widget.isView)
                   ? Align(
                       alignment: Alignment.bottomCenter,
                       child: Container(
-                        color: Colors.white,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(10),
+                              topRight: Radius.circular(10)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey,
+                              spreadRadius: 1,
+                              blurRadius: .5,
+                              offset: Offset(.2, .2),
+                            )
+                          ],
+                        ),
                         height: 100,
                         width: double.infinity,
                         child: Padding(
@@ -101,16 +124,51 @@ class _MapsState extends State<Maps> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
-                              Text(
-                                '${model.distance.toStringAsFixed(2)} Km',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w600,
+                              Flexible(
+                                child: SingleChildScrollView(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      Text(
+                                        'Dari :',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.w400),
+                                      ),
+                                      AutoSizeText(
+                                        '${model.currentLocation}',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      SizedBox(height: 2),
+                                      Text(
+                                        'Ke :',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.w400),
+                                      ),
+                                      AutoSizeText(
+                                        '${model.destinationLocation}',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      SizedBox(height: 3),
+                                      Center(
+                                        child: Text(
+                                          '${model?.distance?.toStringAsFixed(2)} Km',
+                                          style: TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                               RaisedButton(
                                 onPressed: () => Navigator.pop(context),
-                                child: Text('Exit'),
+                                child: Text('Exit',
+                                    style: TextStyle(color: Colors.white)),
                                 color: Colors.blue,
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(10)),
@@ -143,7 +201,11 @@ class _MapsState extends State<Maps> {
                               Navigator.pushAndRemoveUntil(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (context) => AddUser()),
+                                    builder: (context) => (!widget.isFromUpdate)
+                                        ? AddUser()
+                                        : DetailUser(
+                                            isPrefs: true,
+                                          )),
                                 (Route<dynamic> route) => false,
                               );
                             },

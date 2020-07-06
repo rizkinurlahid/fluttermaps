@@ -16,9 +16,17 @@ class MapsViewModel extends BaseViewModel {
   Marker _marker;
   Circle _circle;
   LatLng _selectedLatLng;
-  Set<Polyline> _polylines = HashSet<Polyline>();
+  // Set<Polyline> _polylines = HashSet<Polyline>();
+  // PolylinePoints _polylinePoints = PolylinePoints();
   List<LatLng> _listLatLng = List<LatLng>();
+  Map<PolylineId, Polyline> _polylines = {};
+  Map<PolylineId, Polyline> get getPolylines => _polylines;
   double _distance;
+
+  String _currentLocation;
+  String _destinationLocation;
+  get currentLocation => _currentLocation;
+  get destinationLocation => _destinationLocation;
 
   StreamSubscription get locationSubscription => _locationSubscription;
   Completer<GoogleMapController> get controller => _controller;
@@ -33,7 +41,7 @@ class MapsViewModel extends BaseViewModel {
   static const LatLng _initialLatLng =
       const LatLng(37.42796133580664, -122.085749655962);
   static const LatLng _destination = const LatLng(-7.559950, 110.811402);
-  get destination => _destination;
+  LatLng get destination => _destination;
 
   static final CameraPosition _initial = CameraPosition(
     target: _initialLatLng,
@@ -132,20 +140,45 @@ class MapsViewModel extends BaseViewModel {
   get disposeSubscription => _disposeSubscription();
 
   getPolylinesAndDistance({@required LatLng current}) async {
-    _listLatLng.add(current);
-    _listLatLng.add(destination);
+    // PointLatLng currentLocation =
+    //     PointLatLng(current.latitude, current.longitude);
+    // PointLatLng destinationLocation =
+    //     PointLatLng(destination.latitude, destination.longitude);
 
-    _polylines.add(Polyline(
-      polylineId: PolylineId('p1'),
-      points: _listLatLng,
-      color: Colors.blue,
-      width: 2,
-    ));
+    // PolylineResult result = await _polylinePoints.getRouteBetweenCoordinates(
+    //     StringApp().apiKey, currentLocation, destinationLocation,
+    //     travelMode: TravelMode.driving);
+    // result.points.forEach((PointLatLng point) {
+    //   _listLatLng.add(LatLng(point.latitude, point.longitude));
+    // });
+
+    // PolylineId id = PolylineId('p1');
+    // Polyline polyline = Polyline(polylineId: id, points: _listLatLng);
+    // _polylines[id] = polyline;
+    // notifyListeners();
 
     // in km
     _distance = await Geolocator().distanceBetween(current.latitude,
             current.longitude, destination.latitude, destination.longitude) /
         1000;
     notifyListeners();
+  }
+
+  getPlacemark({LatLng latLng}) async {
+    List<Placemark> placemarkCurrent = await Geolocator()
+        .placemarkFromCoordinates(latLng.latitude, latLng.longitude);
+    List<Placemark> placemarkDestination = await Geolocator()
+        .placemarkFromCoordinates(
+            _destination.latitude, _destination.longitude);
+    placemarkCurrent.forEach((Placemark f) {
+      _currentLocation =
+          '${f.thoroughfare} ${f.subThoroughfare}, ${f.subLocality}, ${f.locality}, ${f.subAdministrativeArea} ${f.postalCode}, ${f.administrativeArea}, ${f.country}';
+      notifyListeners();
+    });
+    placemarkDestination.forEach((Placemark f) {
+      _destinationLocation =
+          '${f.thoroughfare} ${f.subThoroughfare}, ${f.subLocality}, ${f.locality}, ${f.subAdministrativeArea} ${f.postalCode}, ${f.administrativeArea}, ${f.country}';
+      notifyListeners();
+    });
   }
 }

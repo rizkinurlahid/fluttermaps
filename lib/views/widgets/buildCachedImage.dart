@@ -14,6 +14,8 @@ class BuildCachedImage extends StatelessWidget {
     return Center(
       child: CachedNetworkImage(
         imageUrl: imgUrl,
+        height: 125,
+        width: 125,
         imageBuilder: (context, imageProvider) => Container(
           decoration: BoxDecoration(
             image: DecorationImage(

@@ -4,7 +4,8 @@ import 'package:date_util/date_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_maps/utils/string.dart';
 import 'package:flutter_maps/views/widgets/maps.dart';
-import 'package:flutter_maps/views/widgets/successAddData.dart';
+import 'package:flutter_maps/views/widgets/successLoad.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -45,17 +46,17 @@ class AddUserViewModel extends BaseViewModel {
   bool _isLoading = false;
   get isLoading => _isLoading;
 
-  bool _isNotValidate = false;
-  get isNotValidate => _isNotValidate;
-
   bool _isError = false;
   get isError => _isError;
 
-  double _height;
+  double _height = 0;
   get height => _height;
 
   LatLng _current;
   get currentLatLng => _current;
+
+  String _currentLocation;
+  String get currentLocation => _currentLocation;
 
   Marker _marker;
   get marker => _marker;
@@ -138,8 +139,13 @@ class AddUserViewModel extends BaseViewModel {
           _isError = false;
           notifyListeners();
           print("Success to Add User");
-          Navigator.push(_scaffoldKey.currentContext,
-              MaterialPageRoute(builder: (context) => SuccessAddData()));
+
+          Navigator.push(
+              _scaffoldKey.currentContext,
+              MaterialPageRoute(
+                  builder: (context) => SuccessLoad(
+                        isDelete: false,
+                      )));
         } else {
           _isLoading = false;
           _isError = true;
@@ -181,8 +187,6 @@ class AddUserViewModel extends BaseViewModel {
     notifyListeners();
   }
 
-  get savePrefs => _savePrefs();
-
   _getPrefs() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
 
@@ -201,7 +205,9 @@ class AddUserViewModel extends BaseViewModel {
       _tahun = getTahun;
       _current = LatLng(getLatitude, getLongitude);
 
-      _makeMarker();
+      getPlacemark(latLng: LatLng(getLatitude, getLongitude));
+      Future.delayed(Duration(seconds: 3)).then((_) => _makeMarker());
+
       _namaController = TextEditingController(text: _nama);
       pref.clear();
     }
@@ -213,6 +219,7 @@ class AddUserViewModel extends BaseViewModel {
         markerId: MarkerId('m2'),
         position: _current,
         draggable: false,
+        infoWindow: InfoWindow(title: _currentLocation),
         zIndex: 2,
         flat: true,
         icon: BitmapDescriptor.defaultMarker);
@@ -220,27 +227,26 @@ class AddUserViewModel extends BaseViewModel {
   }
 
   _onValidateData() {
-    _height = 30;
-    notifyListeners();
-
     if (_imageFile != null &&
         _nama != null &&
         _tanggal != null &&
         _bulan != null &&
         _tahun != null) {
-      _isNotValidate = false;
       _savePrefs();
       Navigator.push(
         _scaffoldKey.currentContext,
         MaterialPageRoute(
-          builder: (context) => Maps(isView: false),
+          builder: (context) => Maps(
+            isView: false,
+            isFromUpdate: false,
+          ),
         ),
       );
     } else {
-      _isNotValidate = true;
+      _height = 30;
+      notifyListeners();
       Future.delayed(Duration(seconds: 3)).then((_) {
         _height = 0;
-        _isNotValidate = false;
         notifyListeners();
       });
     }
@@ -248,4 +254,14 @@ class AddUserViewModel extends BaseViewModel {
   }
 
   get onValidateData => _onValidateData();
+
+  getPlacemark({LatLng latLng}) async {
+    List<Placemark> placemarkCurrent = await Geolocator()
+        .placemarkFromCoordinates(latLng.latitude, latLng.longitude);
+    placemarkCurrent.forEach((Placemark f) {
+      _currentLocation =
+          '${f.thoroughfare} ${f.subThoroughfare}, ${f.subLocality}, ${f.locality}, ${f.subAdministrativeArea} ${f.postalCode}, ${f.administrativeArea}, ${f.country}';
+      notifyListeners();
+    });
+  }
 }
